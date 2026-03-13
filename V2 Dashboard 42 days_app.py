@@ -71,7 +71,7 @@ margin-top: 30px;
 
 <body>
 
-<h1>Oncology Dashboard</h1>
+<h1>Oncology Dashboard (QPSD - SKMCH) RC</h1>
 
 <label>Metric:</label>
 <select id="metric">
