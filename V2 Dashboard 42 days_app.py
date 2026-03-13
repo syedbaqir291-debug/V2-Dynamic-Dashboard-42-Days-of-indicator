@@ -287,11 +287,15 @@ textposition: "auto"
 
 }}))
 
+// Fixed X-axis range based on selected metric
 let layout = {{
 barmode: "group",
 title: metric + " by Cancer Category",
 height: 600,
-xaxis: {{range: [0, 350]}}  // <-- Fixed X-axis from 0 to 350
+xaxis: {{
+    range: metric === "Maximum" ? [0, 350] : 
+           (["Mean", "Median", "Minimum"].includes(metric) ? [0, 150] : null)
+}}
 }}
 
 Plotly.newPlot("chart", traces, layout)
