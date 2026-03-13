@@ -216,7 +216,7 @@ function updateChart() {{
 
     let results = [];
     cancerSelected.forEach(cancer => {{
-        let obj = {{"Cancer Category": cancer}};
+        let obj = {{ "Cancer Category": cancer }};
         parameters.forEach(p => {{
             let vals = filtered.filter(r => r["Cancer Category"] === cancer)
                                .map(r => r[p]);
@@ -225,7 +225,7 @@ function updateChart() {{
         results.push(obj);
     }});
 
-    // --- FIXED X-AXIS ---
+    // --- FIXED X-AXIS: max value across filtered data for selected metric ---
     let allValues = [];
     filtered.forEach(r => {{
         parameters.forEach(p => {{
@@ -235,21 +235,21 @@ function updateChart() {{
     }});
     let maxValue = Math.max(...allValues);
 
-    let traces = parameters.map(p => ({
-        y: results.map(r=>r["Cancer Category"]),
-        x: results.map(r=>r[p]),
+    let traces = parameters.map(p => ({{
+        y: results.map(r => r["Cancer Category"]),
+        x: results.map(r => r[p]),
         name: p,
         type: "bar",
         orientation: "h",
-        text: results.map(r=>r[p]),
+        text: results.map(r => r[p]),
         textposition: "auto"
-    }));
+    }}));
 
     let layout = {{
         barmode: "group",
         title: metric + " by Cancer Category",
         height: 600,
-        xaxis: {{ range: [0, maxValue*1.1] }} // Fixed X-axis
+        xaxis: {{ range: [0, maxValue*1.1] }}
     }};
 
     Plotly.newPlot("chart", traces, layout);
