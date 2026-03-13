@@ -42,7 +42,7 @@ if uploaded_file:
 <html>
 <head>
 
-<title>Oncology Dashboard</title>
+<title>Oncology Dashboard SKMC & RC </title>
 
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
