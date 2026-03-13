@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 
-st.set_page_config(page_title="Oncology Dashboard Exporter", layout="wide")
+st.set_page_config(page_title="Oncology Dashboard SKMCH & RC", layout="wide")
 
 st.markdown("""
 <style>
