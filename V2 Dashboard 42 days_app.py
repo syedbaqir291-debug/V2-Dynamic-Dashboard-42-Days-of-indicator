@@ -5,7 +5,7 @@ import io
 
 st.set_page_config(page_title="Oncology Dashboard Exporter", layout="wide")
 
-st.title("Oncology Dashboard Exporter (Interactive HTML)")
+st.title("Oncology Dashboard Exporter (QPSD SKMCH & RC)")
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
