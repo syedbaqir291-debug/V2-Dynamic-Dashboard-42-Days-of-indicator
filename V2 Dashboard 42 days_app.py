@@ -1,13 +1,45 @@
 import streamlit as st
 import pandas as pd
 import json
-import io
 
 st.set_page_config(page_title="Oncology Dashboard Exporter", layout="wide")
 
-st.title("Oncology Dashboard Exporter (QPSD SKMCH & RC)")
+st.markdown("""
+<style>
+
+.stApp {
+    background-color:#f5f7fb;
+}
+
+h1 {
+    font-family: Arial;
+    font-weight:700;
+}
+
+.upload-box {
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0px 3px 10px rgba(0,0,0,0.1);
+}
+
+footer {
+    text-align:center;
+    margin-top:40px;
+    font-size:12px;
+    color:gray;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.title("Oncology Dashboard Exporter")
+
+st.markdown('<div class="upload-box">', unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 if uploaded_file:
 
@@ -27,7 +59,6 @@ if uploaded_file:
     for col in parameter_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Convert dataframe to JSON for HTML dashboard
     data_json = df.to_json(orient="records")
 
     months = sorted(df[month_col].dropna().unique())
@@ -40,29 +71,72 @@ if uploaded_file:
     html = f"""
 <!DOCTYPE html>
 <html>
+
 <head>
 
-<title>Oncology Dashboard SKMC & RC </title>
+<title>Oncology Dashboard</title>
 
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
 <style>
+
 body {{
 font-family: Arial;
-margin: 40px;
+background:#f5f7fb;
+margin:0;
+}}
+
+.header {{
+background:#ffffff;
+padding:20px 40px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}}
+
+.header h1 {{
+margin:0;
+}}
+
+.container {{
+padding:30px 40px;
+}}
+
+.filters {{
+display:flex;
+flex-wrap:wrap;
+gap:20px;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0px 3px 10px rgba(0,0,0,0.08);
+}}
+
+.filter-box {{
+display:flex;
+flex-direction:column;
+font-size:14px;
 }}
 
 select {{
-padding: 6px;
-margin: 10px;
-}}
-
-h1 {{
-margin-bottom: 10px;
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
+min-width:180px;
 }}
 
 #chart {{
-margin-top: 30px;
+margin-top:30px;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0px 3px 10px rgba(0,0,0,0.08);
+}}
+
+.footer {{
+text-align:center;
+font-size:12px;
+color:#666;
+margin-top:40px;
+padding-bottom:20px;
 }}
 
 </style>
@@ -71,9 +145,16 @@ margin-top: 30px;
 
 <body>
 
-<h1>Oncology Dashboard (QPSD - SKMCH) RC</h1>
+<div class="header">
+<h1>Oncology Dashboard</h1>
+</div>
 
-<label>Metric:</label>
+<div class="container">
+
+<div class="filters">
+
+<div class="filter-box">
+<label>Metric</label>
 <select id="metric">
 <option>Mean</option>
 <option>Median</option>
@@ -81,14 +162,27 @@ margin-top: 30px;
 <option>Maximum</option>
 <option>Minimum</option>
 </select>
+</div>
 
-<label>Month:</label>
+<div class="filter-box">
+<label>Month</label>
 <select id="month" multiple></select>
+</div>
 
-<label>Cancer Category:</label>
+<div class="filter-box">
+<label>Cancer Category</label>
 <select id="cancer" multiple></select>
+</div>
+
+</div>
 
 <div id="chart"></div>
+
+</div>
+
+<div class="footer">
+OMAC Developers by S M Baqir
+</div>
 
 <script>
 
@@ -223,3 +317,12 @@ updateChart()
         file_name="oncology_dashboard.html",
         mime="text/html"
     )
+
+st.markdown(
+"""
+<footer>
+OMAC Developers by S M Baqir
+</footer>
+""",
+unsafe_allow_html=True
+)
