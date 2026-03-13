@@ -290,7 +290,8 @@ textposition: "auto"
 let layout = {{
 barmode: "group",
 title: metric + " by Cancer Category",
-height: 600
+height: 600,
+xaxis: {{range: [0, 350]}}  // <-- Fixed X-axis from 0 to 350
 }}
 
 Plotly.newPlot("chart", traces, layout)
