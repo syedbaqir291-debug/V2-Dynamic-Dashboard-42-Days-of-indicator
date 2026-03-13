@@ -1,0 +1,225 @@
+import streamlit as st
+import pandas as pd
+import json
+import io
+
+st.set_page_config(page_title="Oncology Dashboard Exporter", layout="wide")
+
+st.title("Oncology Dashboard Exporter (Interactive HTML)")
+
+uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+
+if uploaded_file:
+
+    df = pd.read_excel(uploaded_file)
+
+    month_col = "Month"
+    cancer_col = "Cancer Category"
+
+    parameter_cols = [
+        "1st visit - WIC acceptance",
+        "WIC acceptance - 1st OPD visit",
+        "1st OPD visit - MDT",
+        "MDT - 1st day of treatment",
+        "Number of days"
+    ]
+
+    for col in parameter_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Convert dataframe to JSON for HTML dashboard
+    data_json = df.to_json(orient="records")
+
+    months = sorted(df[month_col].dropna().unique())
+    cancers = sorted(df[cancer_col].dropna().unique())
+
+    months_js = json.dumps(months)
+    cancers_js = json.dumps(cancers)
+    parameters_js = json.dumps(parameter_cols)
+
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Oncology Dashboard</title>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+<style>
+body {{
+font-family: Arial;
+margin: 40px;
+}}
+
+select {{
+padding: 6px;
+margin: 10px;
+}}
+
+h1 {{
+margin-bottom: 10px;
+}}
+
+#chart {{
+margin-top: 30px;
+}}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Oncology Dashboard</h1>
+
+<label>Metric:</label>
+<select id="metric">
+<option>Mean</option>
+<option>Median</option>
+<option>SD</option>
+<option>Maximum</option>
+<option>Minimum</option>
+</select>
+
+<label>Month:</label>
+<select id="month" multiple></select>
+
+<label>Cancer Category:</label>
+<select id="cancer" multiple></select>
+
+<div id="chart"></div>
+
+<script>
+
+let rawData = {data_json}
+
+let months = {months_js}
+let cancers = {cancers_js}
+let parameters = {parameters_js}
+
+let monthSelect = document.getElementById("month")
+let cancerSelect = document.getElementById("cancer")
+
+months.forEach(m => {{
+let opt = document.createElement("option")
+opt.value = m
+opt.text = m
+opt.selected = true
+monthSelect.appendChild(opt)
+}})
+
+cancers.forEach(c => {{
+let opt = document.createElement("option")
+opt.value = c
+opt.text = c
+opt.selected = true
+cancerSelect.appendChild(opt)
+}})
+
+function getSelected(select) {{
+return Array.from(select.selectedOptions).map(o => o.value)
+}}
+
+function calculateMetric(values, metric) {{
+
+values = values.filter(v => v !== null && !isNaN(v))
+
+if(values.length === 0) return 0
+
+if(metric === "Mean")
+return values.reduce((a,b)=>a+b,0)/values.length
+
+if(metric === "Median") {{
+values.sort((a,b)=>a-b)
+let mid = Math.floor(values.length/2)
+return values.length%2 ? values[mid] : (values[mid-1]+values[mid])/2
+}}
+
+if(metric === "SD") {{
+let mean = values.reduce((a,b)=>a+b,0)/values.length
+let variance = values.reduce((a,b)=>a+(b-mean)**2,0)/(values.length-1)
+return Math.sqrt(variance)
+}}
+
+if(metric === "Maximum")
+return Math.max(...values)
+
+if(metric === "Minimum")
+return Math.min(...values)
+
+}}
+
+function updateChart() {{
+
+let metric = document.getElementById("metric").value
+let monthsSelected = getSelected(monthSelect)
+let cancerSelected = getSelected(cancerSelect)
+
+let filtered = rawData.filter(r =>
+monthsSelected.includes(r["Month"]) &&
+cancerSelected.includes(r["Cancer Category"])
+)
+
+let results = []
+
+cancerSelected.forEach(cancer => {{
+
+let obj = {{"Cancer Category": cancer}}
+
+parameters.forEach(p => {{
+
+let vals = filtered
+.filter(r => r["Cancer Category"] === cancer)
+.map(r => r[p])
+
+obj[p] = Number(calculateMetric(vals, metric).toFixed(1))
+
+}})
+
+results.push(obj)
+
+}})
+
+let traces = parameters.map(p => ({{
+
+y: results.map(r=>r["Cancer Category"]),
+x: results.map(r=>r[p]),
+name: p,
+type: "bar",
+orientation: "h",
+text: results.map(r=>r[p]),
+textposition: "auto"
+
+}}))
+
+let layout = {{
+barmode: "group",
+title: metric + " by Cancer Category",
+height: 600
+}}
+
+Plotly.newPlot("chart", traces, layout)
+
+}}
+
+document.getElementById("metric").addEventListener("change", updateChart)
+monthSelect.addEventListener("change", updateChart)
+cancerSelect.addEventListener("change", updateChart)
+
+updateChart()
+
+</script>
+
+</body>
+</html>
+"""
+
+    st.success("Dashboard ready for download")
+
+    st.download_button(
+        "Download Interactive Dashboard",
+        html,
+        file_name="oncology_dashboard.html",
+        mime="text/html"
+    )
